@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "custom_loading_tips",
+  "version": "${version}",
+  "name": "Loading Tips",
+  "description": "Adds tips, tricks, and gameplay facts to the world loading screen.",
+  "authors": [],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/custom_loading_tips/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "net.naw.custom_loading_tips.client.Custom_loading_tipsClient"
+    ],
+    "main": [
+      "net.naw.custom_loading_tips.Custom_loading_tips"
+    ]
+  },
+  "mixins": [
+    "custom_loading_tips.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}
