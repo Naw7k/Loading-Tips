@@ -1,12 +1,17 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "net.naw.custom_loading_tips.mixin",
+  "package": "net.naw.loading_tips.mixin",
   "compatibilityLevel": "JAVA_21",
+  "mixins": [
+  ],
   "client": [
     "LoadingScreenWorldMixin"
   ],
   "injectors": {
     "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
   }
 }
