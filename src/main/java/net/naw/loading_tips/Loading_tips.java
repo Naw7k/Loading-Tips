@@ -1,4 +1,4 @@
-package net.naw.custom_loading_tips;
+package net.naw.loading_tips;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -11,8 +11,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Custom_loading_tips implements ModInitializer {
-    public static final String MOD_ID = "custom_loading_tips";
+public class Loading_tips implements ModInitializer {
+    public static final String MOD_ID = "loading_tips";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
     public static final List<String> LOADING_TIPS = new ArrayList<>();
 
@@ -25,8 +25,8 @@ public class Custom_loading_tips implements ModInitializer {
 
     private void loadTips() {
         try {
-            // This path must match your folder exactly
-            var resource = getClass().getClassLoader().getResourceAsStream("assets/custom_loading_tips/text/loading_tips.json");
+            // Updated path to match the new mod ID folder
+            var resource = getClass().getClassLoader().getResourceAsStream("assets/loading_tips/text/loading_tips.json");
 
             if (resource != null) {
                 JsonObject json = JsonParser.parseReader(new InputStreamReader(resource, StandardCharsets.UTF_8)).getAsJsonObject();
