@@ -501,6 +501,31 @@
     "Netherite templates are consumed upon use; make copies!",
     "The Silence Armor Trim is the rarest trim in the game.",
     "Trial Chambers are the ultimate test of your combat skills.",
-    "You are now a Minecraft Master. Good luck!"
+    "You are now a Minecraft Master. Good luck!",
+
+
+    "Baby mobs now have unique models instead of being shrunken adults!",
+    "Golden Dandelions keep baby mobs young forever — craft one with a dandelion and 8 gold nuggets!",
+    "Breed a mob at least once to unlock the Golden Dandelion crafting recipe.",
+    "Feed a baby mob a Golden Dandelion again to let it grow up normally.",
+    "Golden Dandelions don't work on undead baby mobs or baby Villagers.",
+    "Piglins will pick up Golden Dandelions off the ground — be careful in the Nether!",
+    "Golden Dandelions can be placed in flower pots and used to craft yellow dye.",
+    "Wandering Traders may randomly sell a Golden Dandelion for 2 emeralds.",
+    "Golden Dandelions used in suspicious stew restore extra hunger and saturation!",
+    "Plant a sapling within 2 blocks of a Golden Dandelion for a 5% chance to grow a bee nest!",
+    "Name Tags are now craftable — combine any metal nugget with paper!",
+    "Name Tags no longer appear in Ancient City or Woodland Mansion chests.",
+    "Master-level Librarians no longer trade Name Tags — craft them or buy from Wandering Traders instead!",
+    "Wandering Traders now sell Name Tags for just 1 emerald!",
+    "Copper blocks under Note Blocks now produce trumpet sounds!",
+    "The trumpet pitch changes depending on the copper block's oxidation level.",
+    "Wax your copper block under a Note Block to lock in your trumpet's pitch forever!",
+    "Baby mobs now have their own dedicated sounds — listen for kittens, piglets, and chicks!",
+    "Saddles and armor no longer visually render on baby mobs.",
+    "Rabbits got a complete model overhaul in Tiny Takeover — fluffier than ever!",
+    "Baby Polar Bears no longer attack Foxes — a long overdue fix!",
+    "Deepslate can now be directly crafted into polished, brick, and tile variants in the Stonecutter!",
+    "Stone can now be directly crafted into cobbled stone variants in the Stonecutter!"
   ]
 }
