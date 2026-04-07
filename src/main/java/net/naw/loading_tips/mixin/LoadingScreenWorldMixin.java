@@ -1,16 +1,15 @@
 package net.naw.loading_tips.mixin;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.world.LevelLoadingScreen;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.sound.PositionedSoundInstance;
-import net.minecraft.item.ItemStack;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.OrderedText;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.LevelLoadingScreen;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
+import net.minecraft.world.item.ItemStack;
 import net.naw.loading_tips.Loading_tips;
 import net.naw.loading_tips.TipCategory;
 import org.spongepowered.asm.mixin.Mixin;
@@ -47,12 +46,12 @@ public abstract class LoadingScreenWorldMixin extends Screen {
     @Unique private float currentScale = 1.0f;
 
     // --- CONFIG PATHS ---
-    @Unique private final Path posConfig = MinecraftClient.getInstance().runDirectory.toPath().resolve("config/loading_tips_pos.properties");
-    @Unique private final Path seenConfig = MinecraftClient.getInstance().runDirectory.toPath().resolve("config/seen_tips.properties");
+    @Unique private final Path posConfig = Minecraft.getInstance().gameDirectory.toPath().resolve("config/loading_tips_pos.properties");
+    @Unique private final Path seenConfig = Minecraft.getInstance().gameDirectory.toPath().resolve("config/seen_tips.properties");
     @Unique private final Set<String> seenTipHashes = new HashSet<>();
     @Unique private int timeOnCurrentTip = 0;
 
-    protected LoadingScreenWorldMixin(Text title) {
+    protected LoadingScreenWorldMixin(Component title) {
         super(title);
     }
 
@@ -97,8 +96,8 @@ public abstract class LoadingScreenWorldMixin extends Screen {
                 tipPctY = Float.parseFloat(p.getProperty("tipPctY", "-1"));
 
                 // Clamp loaded values to prevent the tip from being lost off-screen
-                if (tipPctX != -1) tipPctX = MathHelper.clamp(tipPctX, 0.05f, 0.95f);
-                if (tipPctY != -1) tipPctY = MathHelper.clamp(tipPctY, 0.05f, 0.95f);
+                if (tipPctX != -1) tipPctX = Mth.clamp(tipPctX, 0.05f, 0.95f);
+                if (tipPctY != -1) tipPctY = Mth.clamp(tipPctY, 0.05f, 0.95f);
             }
             // Load the list of tips the user has already seen
             if (Files.exists(seenConfig)) {
@@ -140,13 +139,15 @@ public abstract class LoadingScreenWorldMixin extends Screen {
         return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
     }
 
-    @Inject(method = "render", at = @At("TAIL"))
-    public void onRender(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+    @Inject(method = "extractRenderState", at = @At("TAIL"))
+    public void onRender(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (appearanceTicks < 40) appearanceTicks++;
         if (copyFeedbackTicks > 0) copyFeedbackTicks--;
         internalTime += 0.03f; // Timer for rainbow/animated text effects
 
         if (this.displayTip == null) return;
+
+        if (!Loading_tips.itemsReady) return;
 
         // --- SEEN TIP LOGIC ---
         String rawText = Loading_tips.LOADING_TIPS.get(currentTipIndex);
@@ -169,17 +170,17 @@ public abstract class LoadingScreenWorldMixin extends Screen {
 
         // Wrap text to fit within 70% of the screen width
         int maxWidth = (int)(this.width * 0.7);
-        List<OrderedText> wrappedLines = this.textRenderer.wrapLines(Text.literal(this.displayTip), maxWidth);
+        List<FormattedCharSequence> wrappedLines = this.font.split(Component.literal(this.displayTip), maxWidth);
         int maxLineWidth = 0;
-        for (OrderedText line : wrappedLines) maxLineWidth = Math.max(maxLineWidth, this.textRenderer.getWidth(line));
+        for (FormattedCharSequence line : wrappedLines) maxLineWidth = Math.max(maxLineWidth, this.font.width(line));
 
         // Interaction Box Calculation
         int halfW = (maxLineWidth / 2) + 15;
         int clampPad = halfW + 5;
 
         // Final Clamping to keep tip inside visible screen boundaries
-        tipX = MathHelper.clamp(tipX, clampPad, this.width - clampPad);
-        tipY = MathHelper.clamp(tipY, 25, this.height - 20);
+        tipX = Mth.clamp(tipX, clampPad, this.width - clampPad);
+        tipY = Mth.clamp(tipY, 25, this.height - 20);
 
         // Hover detection for scale animation and clicking
         boolean isOver = (mouseX >= tipX - halfW && mouseX <= tipX + halfW) &&
@@ -187,19 +188,19 @@ public abstract class LoadingScreenWorldMixin extends Screen {
 
         // Smoothly lerp scale for hover effect
         float targetScale = isOver ? 1.015f : 1.0f;
-        currentScale = MathHelper.lerp(delta * 0.45f, currentScale, targetScale);
+        currentScale = Mth.lerp(delta * 0.45f, currentScale, targetScale);
 
         // --- INPUT HANDLING ---
-        long handle = MinecraftClient.getInstance().getWindow().getHandle();
+        long handle = org.lwjgl.glfw.GLFW.glfwGetCurrentContext();
         boolean isLeftDown = org.lwjgl.glfw.GLFW.glfwGetMouseButton(handle, 0) == 1;
         boolean isRightDown = org.lwjgl.glfw.GLFW.glfwGetMouseButton(handle, 1) == 1;
         boolean isMiddleDown = org.lwjgl.glfw.GLFW.glfwGetMouseButton(handle, 2) == 1;
 
         // Middle Click: Copy tip text to clipboard
         if (isMiddleDown && !wasMiddleMouseDown && isOver) {
-            MinecraftClient.getInstance().keyboard.setClipboard(rawText);
+            Minecraft.getInstance().keyboardHandler.setClipboard(rawText);
             copyFeedbackTicks = 40;
-            MinecraftClient.getInstance().getSoundManager().play(new PositionedSoundInstance(SoundEvents.ITEM_BUNDLE_DROP_CONTENTS, SoundCategory.PLAYERS, 0.1f, 1.0f, net.minecraft.util.math.random.Random.create(), 0, 0, 0));
+            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.BUNDLE_DROP_CONTENTS, 1.0f, 0.1f));
         }
 
         // Right Click: Reset tip to default center-bottom position
@@ -221,8 +222,8 @@ public abstract class LoadingScreenWorldMixin extends Screen {
             if (Math.abs(mouseX - startMouseX) > 3 || Math.abs(mouseY - startMouseY) > 3) {
                 if (isOver || isDragging) {
                     isDragging = true;
-                    float newX = MathHelper.clamp((float)(mouseX - dragOffX), 80, this.width - 80);
-                    float newY = MathHelper.clamp((float)(mouseY - dragOffY), 25, this.height - 20);
+                    float newX = Mth.clamp((float)(mouseX - dragOffX), 80, this.width - 80);
+                    float newY = Mth.clamp((float)(mouseY - dragOffY), 25, this.height - 20);
                     // Update and store new percentage based on drag
                     tipPctX = newX / this.width;
                     tipPctY = newY / this.height;
@@ -241,59 +242,59 @@ public abstract class LoadingScreenWorldMixin extends Screen {
         float entranceOpacity = appearanceTicks / 40.0f;
         int tipAlpha = (int)(entranceOpacity * 255);
 
-        context.getMatrices().pushMatrix();
-        context.getMatrices().translate(tipX, tipY - 10);
-        context.getMatrices().scale(currentScale, currentScale);
-        context.getMatrices().translate(-tipX, -(tipY - 10));
+        context.pose().pushMatrix();
+        context.pose().translate(tipX, tipY - 10);
+        context.pose().scale(currentScale, currentScale);
+        context.pose().translate(-tipX, -(tipY - 10));
 
         // Get Category Data (Title & Icon) from TipCategory class
         TipCategory.Category cat = TipCategory.getCategory(rawText.toLowerCase());
         String headerTitle = cat.title();
         ItemStack iconStack = cat.icon();
 
-        int hW = this.textRenderer.getWidth("§l" + headerTitle);
+        int hW = this.font.width("§l" + headerTitle);
         int iconX = (int)tipX - (hW / 2) - 14;
-        int iconY = (int)tipY - 11;
+        int iconY = (int)tipY - 16;
 
         // "New Tip" indicator star
         if (isNew) {
-            float pulse = (MathHelper.sin(internalTime * 6f) + 1f) / 2f;
+            float pulse = (Mth.sin(internalTime * 6f) + 1f) / 2f;
             int starC = (tipAlpha << 24) | (255 << 16) | ((int)(200 * pulse + 55) << 8) | 50;
-            context.getMatrices().pushMatrix();
-            context.getMatrices().translate(iconX - 3, iconY - 7);
-            context.getMatrices().scale(0.75f, 0.75f);
-            context.drawText(this.textRenderer, "*", 0, 0, starC, true);
-            context.getMatrices().popMatrix();
+            context.pose().pushMatrix();
+            context.pose().translate(iconX - 3, iconY - 7);
+            context.pose().scale(0.75f, 0.75f);
+            context.text(this.font, "*", 0, 0, starC, true);
+            context.pose().popMatrix();
         }
 
         // Draw Category Icon
-        context.getMatrices().pushMatrix();
-        context.getMatrices().translate(iconX, iconY);
-        context.getMatrices().scale(entranceOpacity, entranceOpacity);
-        context.drawItem(iconStack, -8, -8);
-        context.getMatrices().popMatrix();
+        context.pose().pushMatrix();
+        context.pose().translate(iconX, iconY);
+        context.pose().scale(entranceOpacity, entranceOpacity);
+        if (!iconStack.isEmpty()) context.item(iconStack, -8, -8);
+        context.pose().popMatrix();
 
         // Draw Header
-        context.drawText(this.textRenderer, "§l" + headerTitle, (int)tipX - (hW / 2), (int)tipY - 15, (tipAlpha << 24) | 0xFFFFFF, false);
+        context.text(this.font, "§l" + headerTitle, (int)tipX - (hW / 2), (int)tipY - 15, (tipAlpha << 24) | 0xFFFFFF, false);
 
         // Draw Tip ID when hovered
         if (isOver) {
             String ghostID = "§7#" + (currentTipIndex + 1);
-            context.drawText(this.textRenderer, ghostID, (int)tipX + (hW / 2) + 4, (int)tipY - 15, (tipAlpha << 24) | 0xAAAAAA, false);
+            context.text(this.font, ghostID, (int)tipX + (hW / 2) + 4, (int)tipY - 15, (tipAlpha << 24) | 0xAAAAAA, false);
         }
 
-        context.getMatrices().popMatrix();
+        context.pose().popMatrix();
 
         // Copy success feedback text
         if (copyFeedbackTicks > 0) {
             String copyText = "§a§oCopied to Clipboard!";
-            context.drawText(this.textRenderer, copyText, (int)tipX - (this.textRenderer.getWidth(copyText) / 2), (int)tipY - 30, (255 << 24) | 0x55FF55, false);
+            context.text(this.font, copyText, (int)tipX - (this.font.width(copyText) / 2), (int)tipY - 30, (255 << 24) | 0x55FF55, false);
         }
 
         // Draw wrapped Tip text
         int currentY = (int)tipY;
-        for (OrderedText line : wrappedLines) {
-            context.drawText(this.textRenderer, line, (int)tipX - (this.textRenderer.getWidth(line) / 2), currentY, (tipAlpha << 24) | 0xFFFFFF, false);
+        for (FormattedCharSequence line : wrappedLines) {
+            context.text(this.font, line, (int)tipX - (this.font.width(line) / 2), currentY, (tipAlpha << 24) | 0xFFFFFF, true);
             currentY += 10;
         }
     }
