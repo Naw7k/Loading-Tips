@@ -15,12 +15,14 @@ public class Loading_tips implements ModInitializer {
     public static final String MOD_ID = "loading_tips";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
     public static final List<String> LOADING_TIPS = new ArrayList<>();
+    public static boolean itemsReady = false;
 
     @Override
     public void onInitialize() {
         // FIRST: Add a dummy tip so we can see if the Mixin works
         LOADING_TIPS.add("Failsafe: Mixin is working, but JSON not found!");
         loadTips();
+        itemsReady = true;
     }
 
     private void loadTips() {
