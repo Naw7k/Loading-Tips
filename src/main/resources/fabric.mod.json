@@ -13,9 +13,6 @@
   "icon": "assets/loading_tips/icon.png",
   "environment": "client",
   "entrypoints": {
-    "client": [
-      "net.naw.loading_tips.client.Loading_tipsClient"
-    ],
     "main": [
       "net.naw.loading_tips.Loading_tips"
     ]
